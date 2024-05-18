@@ -2,14 +2,23 @@
 import redis
 import uuid
 from typing import Union, Callable, Optional
+from functools import wraps
 
 """
     a cache class
 """
 
 
-class Cache:
+def count_calls(method: Callable) -> Callable:
+    """use the method"""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        id = method.__qualname__
+        self._redis.incr(id)
+        return method(self, *args, **kwargs)
+    return wrapper
 
+class Cache:
     def __init__(self) -> None:
         self._redis = redis.Redis()
         self._redis.flushdb()
